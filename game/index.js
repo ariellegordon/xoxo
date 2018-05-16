@@ -35,9 +35,11 @@ function boardReducer(board = board, action) {
 }
 
 export default function reducer(state = initialState, action) {
+  const nextBoard = boardReducer(state.board, action);
+  const winnerState = winner(nextBoard);
   return {
-    board: boardReducer(state.board, action),
-    // winner: winner(state.board),
+    board: nextBoard,
+    winner: winnerState,
     turn: turnReducer(state.turn, action)
   };
 }
@@ -55,15 +57,15 @@ export function winner(board) {
     if (streak(board, [0, 2], [1, 1], [2, 0]) !== undefined) {
       return "The winner is ", streak(board, [0, 2], [1, 1], [2, 0]);
     }
-    for (let j = 0; j < 3; j++) {
-      for (let k = 0; k < 3; k++) {
-        if (!board.hasIn([j, k])) {
-          return null;
-        }
+  }
+  for (let j = 0; j < 3; j++) {
+    for (let k = 0; k < 3; k++) {
+      if (!board.hasIn([j, k])) {
+        return null;
       }
     }
-    return "draw";
   }
+  return "draw";
 }
 
 function streak(board, firstCoord, ...remainingCoords) {
@@ -75,7 +77,7 @@ function streak(board, firstCoord, ...remainingCoords) {
       count++;
     }
   }
-  if (count === args.length + 1) {
+  if (count === args.length) {
     return comparitor;
   } else {
     return undefined;
