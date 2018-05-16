@@ -5,20 +5,12 @@ const board = Map();
 
 const initialState = {
   turn: "X",
-  board: board
+  board: board,
+  winner: null
 };
 
-const MOVEX = "MOVEX";
-const MOVEO = "MOVEO";
-
 const MOVE = "MOVE";
-// export const move = (type, position, player) => {
-//   return {
-//     type: type,
-//     position: position,
-//     player: player
-//   };
-// };
+
 let player = board.turn;
 
 export const move = (player, position) => {
@@ -29,30 +21,63 @@ export const move = (player, position) => {
   };
 };
 
-export default function reducer(state = initialState, action) {
-  // TODO
-  console.log("action: ", action);
-  console.log("state", state);
-  ///if (state === {}) state = initialState;
-  //const newState = Object.assign({}, state);
-  switch (action.type) {
-    case MOVE:
-      //ternary for if x, make move x at position
-      console.log("oldboard:", board);
-      return {
-        board: state.board.setIn(action.position, action.turn),
-
-        turn: action.turn === "X" ? "O" : "X"
-      };
-    default:
-      return state;
+function turnReducer(turn = "X", action) {
+  if (action.type === MOVE) {
+    return turn === "X" ? "O" : "X";
   }
-  // switch(action.turn){
-  //   case X:
-  //   case O:
-  //   default:
-  //     retur
-  // }
+  return turn;
 }
 
-// export const game = createStore(reducer);
+function boardReducer(board = board, action) {
+  if (action.type === MOVE) {
+    return board.setIn(action.position, action.turn);
+  } else return board;
+}
+
+export default function reducer(state = initialState, action) {
+  return {
+    board: boardReducer(state.board, action),
+    // winner: winner(state.board),
+    turn: turnReducer(state.turn, action)
+  };
+}
+
+export function winner(board) {
+  for (let i = 0; i < 3; i++) {
+    if (streak(board, [i, 0], [i, 1], [i, 2]) !== undefined) {
+      return "The winner is ", streak(board, [i, 0], [i, 1], [i, 2]);
+    } else if (streak(board, [0, i], [1, i], [2, i]) !== undefined) {
+      return "The winner is ", streak(board, [0, i], [1, i], [2, i]);
+    }
+    if (streak(board, [0, 0], [1, 1], [2, 2]) !== undefined) {
+      return "The winner is ", streak(board, [0, 0], [1, 1], [2, 2]);
+    }
+    if (streak(board, [0, 2], [1, 1], [2, 0]) !== undefined) {
+      return "The winner is ", streak(board, [0, 2], [1, 1], [2, 0]);
+    }
+    for (let j = 0; j < 3; j++) {
+      for (let k = 0; k < 3; k++) {
+        if (!board.hasIn([j, k])) {
+          return null;
+        }
+      }
+    }
+    return "draw";
+  }
+}
+
+function streak(board, firstCoord, ...remainingCoords) {
+  let comparitor = board.getIn(firstCoord);
+  let args = [...remainingCoords];
+  let count = 0;
+  for (let i = 0; i < args.length; i++) {
+    if (comparitor === board.getIn(args[i])) {
+      count++;
+    }
+  }
+  if (count === args.length + 1) {
+    return comparitor;
+  } else {
+    return undefined;
+  }
+}
